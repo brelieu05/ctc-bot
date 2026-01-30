@@ -8,8 +8,8 @@ from datetime import datetime, timedelta, timezone
 from slack_sdk import WebClient
 import pytz
 
-# Channel where announcements are posted (set via STUDY_CHANNEL_ID env)
-STUDY_CHANNEL_ID = os.environ.get("STUDY_CHANNEL_ID")
+# Channel where announcements are posted
+STUDY_CHANNEL_ID = "C0ACQP6P3T2"
 
 # Set your timezone here (e.g., 'America/Los_Angeles', 'America/New_York', 'America/Chicago')
 TIMEZONE = pytz.timezone(os.environ.get("TZ", "America/Los_Angeles"))

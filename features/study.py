@@ -3,12 +3,16 @@ import os
 import threading
 import time
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from slack_sdk import WebClient
+import pytz
 
 # Channel where announcements are posted (set via STUDY_CHANNEL_ID env)
 STUDY_CHANNEL_ID = os.environ.get("STUDY_CHANNEL_ID")
+
+# Set your timezone here (e.g., 'America/Los_Angeles', 'America/New_York', 'America/Chicago')
+TIMEZONE = pytz.timezone(os.environ.get("TZ", "America/Los_Angeles"))
 
 UCI_LOCATIONS = [
     "Langson Library",
@@ -78,7 +82,7 @@ def _build_study_modal_blocks(other_location_value=None):
         {"text": {"type": "plain_text", "text": "PM"}, "value": "PM"},
     ]
     # Prefill start time with current time; end time with next full hour
-    now = datetime.now()
+    now = datetime.now(TIMEZONE)
     start_hour_12 = now.hour % 12 or 12
     start_minute = now.minute
     start_ampm = "AM" if now.hour < 12 else "PM"

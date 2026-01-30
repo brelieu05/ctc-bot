@@ -9,7 +9,13 @@ from slack_sdk import WebClient
 import pytz
 
 # Channel where announcements are posted
-STUDY_CHANNEL_ID = "C0ACQP6P3T2"
+# Use TEST_CHANNEL_ID if ENV is "development", otherwise use the hardcoded channel
+if os.environ.get("ENV") == "development":
+    STUDY_CHANNEL_ID = os.environ.get("TEST_CHANNEL_ID")
+    if not STUDY_CHANNEL_ID:
+        raise ValueError("TEST_CHANNEL_ID environment variable is required in development mode")
+else:
+    STUDY_CHANNEL_ID = "C0ACQP6P3T2"
 
 # Set your timezone here (e.g., 'America/Los_Angeles', 'America/New_York', 'America/Chicago')
 TIMEZONE = pytz.timezone(os.environ.get("TZ", "America/Los_Angeles"))

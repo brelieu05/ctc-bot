@@ -507,6 +507,39 @@ def register_study_handlers(app):
             text=text,
         )
 
+    @app.event("member_joined_channel")
+    def handle_member_joined_channel(event, client, logger):
+        """Send instructions to users when they join the study channel."""
+        # Only send in the study channel
+        if event.get("channel") != STUDY_CHANNEL_ID:
+            return
+        
+        user_id = event.get("user")
+        
+        instructions = """👋 Welcome to Study Sessions!
+
+        Here's how to use this channel:
+
+        *Commands:*
+        • `/study` — Share where you're studying and for how long
+        • Check the pinned message for the current study sessions
+
+        Happy studying! 📚"""
+        
+        try:
+            client.chat_postEphemeral(
+                channel=STUDY_CHANNEL_ID,
+                user=user_id,
+                text=instructions,
+            )
+        except Exception as e:
+            logger.error(f"Failed to send welcome message: {e}")
+
+    @app.event("app_mention")
+    def handle_app_mention(event, client):
+        """Handle when the bot is mentioned."""
+        pass
+
     # Start background thread to unpin expired sessions every 60s
     t = threading.Thread(target=_expiry_cleanup_loop, daemon=True)
     t.start()

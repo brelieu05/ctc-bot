@@ -1,13 +1,12 @@
 # ctc-bot ⚡️ Bolt for Python
 
-> Slack bot for UCI campus: share where you’re studying and see who else is studying for a set duration.
+> Slack bot for UCI campus: share where you're studying and see who else is studying for a set duration.
 
 ## Overview
 
 This is a Slack app built with [Bolt for Python](https://docs.slack.dev/tools/bolt-python/) that lets users:
 
-- **Share their study location** — `/study` opens a modal to pick a UCI location (Langson, Science Library, Gateway, etc.), optional specific spot, and duration (30 min – 3 hours). The bot announces it to a channel for that duration.
-- **See who’s studying** — `/studying` lists everyone currently sharing a location and how much time is left.
+- **Share their study location** — `/study` opens a modal to pick a UCI location (Langson, Science Library, Gateway, etc.) and specific spot. The bot announces it to a channel for that duration.
 
 Sessions are stored in memory and expire automatically after the chosen duration.
 
@@ -26,7 +25,7 @@ SLACK_APP_TOKEN=xapp-...
 STUDY_CHANNEL_ID=C01234ABCD
 ```
 
-To get a channel ID: right-click the channel in Slack → “View channel details” → copy the ID at the bottom.
+To get a channel ID: right-click the channel in Slack → "View channel details" → copy the ID at the bottom.
 
 ### 2. Setup your local project
 
@@ -52,9 +51,8 @@ In [Slack API](https://api.slack.com/apps) → your app → **Slash Commands**:
 | Command   | Short Description        |
 |----------|---------------------------|
 | `/study` | Share where you're studying |
-| `/studying` | See who's studying right now |
 
-Use **Request URL** only if you’re on HTTP (not Socket Mode); with Socket Mode you can leave it blank for these.
+Use **Request URL** only if you're on HTTP (not Socket Mode); with Socket Mode you can leave it blank for these.
 
 ### 4. Start the app
 
@@ -78,7 +76,6 @@ Or use the helper script:
 ## Usage
 
 - **`/study`** — Opens a modal: choose a UCI location, optional specific spot, and duration. Submitting posts an announcement to `STUDY_CHANNEL_ID` (or DMs you if not set) and adds you to the active list until the duration ends.
-- **`/studying`** — Shows who’s currently sharing a location and approximate time left (ephemeral, only you see it).
 
 ## More examples
 

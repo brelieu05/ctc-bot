@@ -203,7 +203,7 @@ def _build_study_modal_blocks(other_location_value=None):
 
 
 def register_study_handlers(app):
-    """Register /study, /studying, study_modal, and study_cancel with the Bolt app."""
+    """Register /study, study_modal, and study_cancel with the Bolt app."""
 
     def _open_already_studying_modal(trigger_id, session_id, session, client):
         """Open modal prompting user to cancel their existing session."""
@@ -475,37 +475,6 @@ def register_study_handlers(app):
                     user=user_id,
                     text="Cancelled. Use `/study` again to share a new location.",
                 )
-
-    @app.command("/studying")
-    def cmd_studying(ack, body, client):
-        _clean_expired_sessions(client)
-        ack()
-
-        if not active_sessions:
-            client.chat_postEphemeral(
-                channel=body["channel_id"],
-                user=body["user_id"],
-                text="No one is currently sharing their study location. Use `/study` to share yours!",
-            )
-            return
-
-        lines = []
-        for s in active_sessions.values():
-            if s["end_ts"] <= time.time():
-                continue
-            mins_left = int((s["end_ts"] - time.time()) / 60)
-            lines.append(f"• <@{s['user_id']}> — *{s['location']}* (about {mins_left} min left)")
-
-        if not lines:
-            text = "No one is currently sharing their study location. Use `/study` to share yours!"
-        else:
-            text = "Who's studying right now:\n\n" + "\n".join(lines)
-
-        client.chat_postEphemeral(
-            channel=body["channel_id"],
-            user=body["user_id"],
-            text=text,
-        )
 
     @app.event("member_joined_channel")
     def handle_member_joined_channel(event, client, logger):

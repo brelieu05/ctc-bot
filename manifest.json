@@ -20,7 +20,7 @@
   },
   "settings": {
     "event_subscriptions": {
-      "bot_events": ["message.channels", "message.im"]
+      "bot_events": ["message.channels", "message.im", "member_joined_channel"]
     },
     "interactivity": {
       "is_enabled": true

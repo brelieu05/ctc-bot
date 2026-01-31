@@ -9,6 +9,8 @@ from slack_sdk import WebClient
 import pytz
 
 # Channel where announcements are posted
+# Use TEST_CHANNEL_ID if ENV is "development", otherwise use the hardcoded channel
+
 STUDY_CHANNEL_ID = "C0ACQP6P3T2"
 
 # Set your timezone here (e.g., 'America/Los_Angeles', 'America/New_York', 'America/Chicago')
@@ -117,7 +119,7 @@ def _build_study_modal_blocks(other_location_value=None):
                 "placeholder": {"type": "plain_text", "text": "e.g. 4th floor Langson"},
                 "initial_value": other_location_value or "",
             },
-            "label": {"type": "plain_text", "text": "Specific spot (optional)"},
+            "label": {"type": "plain_text", "text": "Specific spot"},
         },
         {
             "type": "input",
@@ -128,7 +130,7 @@ def _build_study_modal_blocks(other_location_value=None):
                 "action_id": "studying_with_input",
                 "placeholder": {"type": "plain_text", "text": "Tag people studying with you"},
             },
-            "label": {"type": "plain_text", "text": "Studying with (optional)"},
+            "label": {"type": "plain_text", "text": "Studying with"},
         },
         {
             "type": "input",
@@ -140,7 +142,18 @@ def _build_study_modal_blocks(other_location_value=None):
                 "placeholder": {"type": "plain_text", "text": "e.g. Studying for CS161, feel free to join!"},
                 "multiline": True,
             },
-            "label": {"type": "plain_text", "text": "Description (optional)"},
+            "label": {"type": "plain_text", "text": "Description"},
+        },
+        {
+            "type": "input",
+            "block_id": "image_block",
+            "optional": True,
+            "element": {
+                "type": "file_input",
+                "action_id": "image_input",
+                "filetypes": ["png", "jpg", "jpeg", "gif", "webp"],
+            },
+            "label": {"type": "plain_text", "text": "Share a photo to show your study spot"},
         },
         {"type": "header", "block_id": "start_time_header", "text": {"type": "plain_text", "text": "Start time", "emoji": True}},
         {
@@ -303,6 +316,25 @@ def register_study_handlers(app):
         description_raw = (description_block.get("description_input") or {}).get("value") or ""
         description = description_raw.strip() if isinstance(description_raw, str) else ""
 
+        # Handle image upload
+        image_block = view["state"]["values"].get("image_block") or {}
+        image_obj = image_block.get("image_input") or {}
+        image_files = image_obj.get("files") or []
+        image_url = None
+        if image_files and len(image_files) > 0:
+            file_data = image_files[0]
+            # The file data from modal already contains permalink_public and url_private
+            permalink_public = file_data.get("permalink_public")
+            url_private = file_data.get("url_private")
+            if permalink_public and url_private:
+                # Extract the pub_secret from permalink_public and construct direct URL
+                # permalink_public format: https://slack-files.com/TEAM-FILE-PUBSECRET
+                # We need to use the url_private with ?pub_secret=PUBSECRET
+                pub_secret = permalink_public.split("-")[-1] if "-" in permalink_public else None
+                if pub_secret:
+                    image_url = f"{url_private}?pub_secret={pub_secret}"
+            print(f"[DEBUG] final image_url: {image_url}")
+
         def _get_select(block_id, action_id, default=None):
             obj = (view["state"]["values"].get(block_id) or {}).get(action_id) or {}
             opt = obj.get("selected_option")
@@ -344,6 +376,7 @@ def register_study_handlers(app):
             "user_name": user_name,
             "location": location,
             "end_ts": end_ts,
+            "image_url": image_url,
         }
 
         if not channel_id:
@@ -365,7 +398,17 @@ def register_study_handlers(app):
                     "type": "section",
                     "text": {"type": "mrkdwn", "text": f"_{description}_"},
                 })
+            if image_url:
+                blocks.append({"type": "divider"})
+                blocks.append({
+                    "type": "image",
+                    "image_url": image_url,
+                    "alt_text": f"Study spot photo from {user_name}",
+                    "block_id": "study_image_block",
+                })
             full_text = f"{msg}\n_{description}_" if description else msg
+            if image_url:
+                full_text += f"\nPhoto attached"
             result = client.chat_postMessage(
                 channel=channel_id,
                 text=full_text,
@@ -404,8 +447,11 @@ def register_study_handlers(app):
             )
 
     def _update_message_cancelled(client, channel_id, message_ts, original_text):
-        escaped = original_text.replace("~", " about ")
-        cancelled_text = f"~{escaped}~ — Cancelled"
+        # Use proper Slack markdown for strikethrough: ~text~
+        # Split the text and apply strikethrough to each line
+        lines = original_text.split('\n')
+        strikethrough_lines = [f"~{line}~" for line in lines]
+        cancelled_text = "\n".join(strikethrough_lines) + " — Cancelled"
         client.chat_update(
             channel=channel_id,
             ts=message_ts,
